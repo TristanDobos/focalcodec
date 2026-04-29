@@ -191,6 +191,9 @@ def reconstruct_wavs(experiment_name: str):
         output_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens") / experiment_name
         output_dir.mkdir(parents=True, exist_ok=True)
 
+        print("tokens are")
+        print(encoded.detach().cpu())
+
         torch.save(
             {
                 "tokens": encoded.detach().cpu(),
