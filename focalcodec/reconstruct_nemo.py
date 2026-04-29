@@ -183,16 +183,30 @@ def reconstruct_wavs(experiment_name: str):
         else:
             commit_loss = 0.0
 
+        last_part = wav_path.split("/")[-1]
+
+        save_path = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens/"+experiment_name+"/"+last_part+ ".pt") 
+
+        torch.save(
+            {
+                "tokens": encoded.detach().cpu(),
+                "encoded_len": encoded_len.detach().cpu() if torch.is_tensor(encoded_len) else encoded_len,
+            },
+            save_path,
+        )
+
+
+
         # [B, T]
-        audio_gen, _ = codec.audio_decoder(inputs=encoded, input_len=encoded_len)
+        # audio_gen, _ = codec.audio_decoder(inputs=encoded, input_len=encoded_len)
 
-        sample_rate = 16000
+        # sample_rate = 16000
 
 
-        save_path = f"{nano_results_path}/{wav_name}"
-        print(f"Saving {wav_name} into the path {save_path}")
-        # torchaudio.save(str(save_path), audio_gen, sample_rate)
-        sf.write(str(save_path), audio_gen.squeeze(0).cpu().numpy(), sample_rate)
+        # save_path = f"{nano_results_path}/{wav_name}"
+        # print(f"Saving {wav_name} into the path {save_path}")
+        # # torchaudio.save(str(save_path), audio_gen, sample_rate)
+        # sf.write(str(save_path), audio_gen.squeeze(0).cpu().numpy(), sample_rate)
 
 
 if __name__ == "__main__":
