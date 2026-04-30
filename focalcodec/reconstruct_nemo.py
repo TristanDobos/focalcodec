@@ -119,10 +119,10 @@ def reconstruct_wavs(experiment_name: str):
 
     codec = load_nemo_codec(checkpoint_path)
 
-    nano_results_path = f"/mnt/scratch/tmp/xdobos00/validation_reconstructions/{experiment_name}"
+    # nano_results_path = f"/mnt/scratch/tmp/xdobos00/validation_reconstructions/{experiment_name}"
 
-    save_dir = Path(nano_results_path)
-    save_dir.mkdir(parents=True, exist_ok=True)
+    # save_dir = Path(nano_results_path)
+    # save_dir.mkdir(parents=True, exist_ok=True)
 
     print(f"Loaded model from: {checkpoint_path}")
     print(f"Running on device: {device}")
@@ -140,44 +140,50 @@ def reconstruct_wavs(experiment_name: str):
             wav_name = os.path.basename(wav_path)
             print(f"Processing {wav_name}...")
 
-            sig_np, sample_rate = sf.read(wav_path, dtype="float32")
-            sig = torch.from_numpy(sig_np)
-
-            if sig.ndim == 1:
-                sig = sig.unsqueeze(0)      # [1, T]
-            else:
-                sig = sig.transpose(0, 1)   # [C, T]
-
-            if sig.shape[0] > 1:
-                sig = sig.mean(dim=0, keepdim=True)
-
-            audio = sig.to(torch.float32).to(device)
-            audio_len = torch.tensor([audio.shape[1]], dtype=torch.long, device=device)
-
-            encoded, encoded_len = codec.encode(
-                audio=audio,
-                audio_len=audio_len,
-            )
-
-
-            last_part = wav_path.split("/")[-1]
-
             save_path = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big/"+experiment_name+"/"+last_part+ ".pt") 
-
-            output_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big") / experiment_name
-            output_dir.mkdir(parents=True, exist_ok=True)
 
 
             if save_path.exists():
                 print(f"Skipping, file already exists: {save_path}")
             else:
-                torch.save(
-                    {
-                        "tokens": encoded.detach().cpu(),
-                        "encoded_len": encoded_len.detach().cpu() if torch.is_tensor(encoded_len) else encoded_len,
-                    },
-                    save_path,
+                sig_np, sample_rate = sf.read(wav_path, dtype="float32")
+                sig = torch.from_numpy(sig_np)
+
+                if sig.ndim == 1:
+                    sig = sig.unsqueeze(0)      # [1, T]
+                else:
+                    sig = sig.transpose(0, 1)   # [C, T]
+
+                if sig.shape[0] > 1:
+                    sig = sig.mean(dim=0, keepdim=True)
+
+                audio = sig.to(torch.float32).to(device)
+                audio_len = torch.tensor([audio.shape[1]], dtype=torch.long, device=device)
+
+                encoded, encoded_len = codec.encode(
+                    audio=audio,
+                    audio_len=audio_len,
                 )
+
+
+                last_part = wav_path.split("/")[-1]
+
+                save_path = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big/"+experiment_name+"/"+last_part+ ".pt") 
+
+                output_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big") / experiment_name
+                output_dir.mkdir(parents=True, exist_ok=True)
+
+
+                if save_path.exists():
+                    print(f"Skipping, file already exists: {save_path}")
+                else:
+                    torch.save(
+                        {
+                            "tokens": encoded.detach().cpu(),
+                            "encoded_len": encoded_len.detach().cpu() if torch.is_tensor(encoded_len) else encoded_len,
+                        },
+                        save_path,
+                    )
 
 
 if __name__ == "__main__":
@@ -195,3 +201,16 @@ if __name__ == "__main__":
 #          [2223, 2223, 2223,  ..., 2646, 2646, 2646],
 #          [2790, 2790, 2790,  ..., 1549, 1539, 1548],
 #          [1099, 1099, 1099,  ..., 2181, 1542, 1542]]], dtype=torch.int32), 'encoded_len': tensor([367], dtype=torch.int32)}
+
+
+qsub -N na_e1_v3_25hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_25hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e1_v3_6_25hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_6_25hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e2_0_3kbps   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_0_3kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e2_v3_0_15kbps   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_v3_0_15kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e3_12_5hz        -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e3_12_5hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e1_v3_12_5hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_12_5hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e1_v3_50hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_50hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e2_0_15kbps    -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_0_15kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e2_0_6kbps   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_0_6kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e2_v3_0_3kbps    -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_v3_0_3kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+qsub -N na_e4_48_12_5hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e4_48_12_5hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
