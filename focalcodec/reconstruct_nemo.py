@@ -140,6 +140,9 @@ def reconstruct_wavs(experiment_name: str):
             wav_name = os.path.basename(wav_path)
             print(f"Processing {wav_name}...")
 
+            last_part = wav_path.split("/")[-1]
+
+
             save_path = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big/"+experiment_name+"/"+last_part+ ".pt") 
 
 
