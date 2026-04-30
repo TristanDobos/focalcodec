@@ -203,14 +203,14 @@ if __name__ == "__main__":
 #          [1099, 1099, 1099,  ..., 2181, 1542, 1542]]], dtype=torch.int32), 'encoded_len': tensor([367], dtype=torch.int32)}
 
 
-qsub -N na_e1_v3_25hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_25hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e1_v3_6_25hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_6_25hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e2_0_3kbps   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_0_3kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e2_v3_0_15kbps   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_v3_0_15kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e3_12_5hz        -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e3_12_5hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e1_v3_12_5hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_12_5hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e1_v3_50hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_50hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e2_0_15kbps    -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_0_15kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e2_0_6kbps   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_0_6kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e2_v3_0_3kbps    -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_v3_0_3kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
-qsub -N na_e4_48_12_5hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e4_48_12_5hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e1_v3_25hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_25hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e1_v3_6_25hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_6_25hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e2_0_3kbps   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_0_3kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e2_v3_0_15kbps   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_v3_0_15kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e3_12_5hz        -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e3_12_5hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e1_v3_12_5hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_12_5hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e1_v3_50hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e1_v3_50hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e2_0_15kbps    -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_0_15kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e2_0_6kbps   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_0_6kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e2_v3_0_3kbps    -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e2_v3_0_3kbps,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
+# qsub -N na_e4_48_12_5hz   -q all.q -l  gpu=1,gpu_ram=16G,ram_free=16G,mem_free=16G,matylda6=1 -v EXP_NAME=na_e4_48_12_5hz,ALLOWED_GPUS=1 /mnt/matylda6/xdobos00/bp-training/inference_metrics.sh
