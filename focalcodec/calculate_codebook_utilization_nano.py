@@ -123,15 +123,6 @@ def compute_entropy_from_saved_tokens(
 
     return metrics
 
-experiment_name = "NanoCodecWithMetricsWPesqPaper"
-
-tokens_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens") / experiment_name
-
-metrics = compute_entropy_from_saved_tokens(
-    tokens_dir=tokens_dir,
-    codebook_size=9 * 8 * 8 * 7,
-    num_codebooks=4,
-)
 
 
 
@@ -141,6 +132,13 @@ args = parser.parse_args()
 
 experiment_name = args.experiment_name
 tokens_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens") / experiment_name
+
+
+metrics = compute_entropy_from_saved_tokens(
+    tokens_dir=tokens_dir,
+    codebook_size=9 * 8 * 8 * 7,
+    num_codebooks=4,
+)
 
 
 for c in range(4):
