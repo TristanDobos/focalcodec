@@ -6,6 +6,7 @@ import torch
 import torchaudio
 import soundfile as sf
 from nemo.collections.tts.models import AudioCodecModel
+import json
 
 files_to_reconstruct22k = ["/mnt/matylda6/xdobos00/bp-training/gt_wavs_2205k/3853-163249-0024.wav",
 "/mnt/matylda6/xdobos00/bp-training/gt_wavs_2205k/3853-163249-0029.wav",
@@ -77,6 +78,11 @@ files_to_reconstruct = ["/mnt/matylda6/xdobos00/bp-training/gt_wavs/3853-163249-
 
 device = "cpu"
 
+prefix_path = "/mnt/matylda6/xdobos00/NeMo-old/scripts/dataset_processing/data-100/"
+
+json_file = "/mnt/matylda6/xdobos00/NeMo-old/scripts/dataset_processing/data-100/librispeech_16000_flat.json"
+manifest_path = Path(json_file) 
+
 def load_nemo_codec(model_path: str):
     model_path = str(model_path)
 
@@ -121,94 +127,57 @@ def reconstruct_wavs(experiment_name: str):
     print(f"Loaded model from: {checkpoint_path}")
     print(f"Running on device: {device}")
     print(f"Model input sample rate: {codec.sample_rate}")
-    # print(f"Model output sample rate: {codec.output_sample_rate}")
 
-    for wav_path in files_to_reconstruct:
-        print()
-        wav_name = os.path.basename(wav_path)
-        print(f"Processing {wav_name}...")
+    with manifest_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
 
-        sig_np, sample_rate = sf.read(wav_path, dtype="float32")
-        sig = torch.from_numpy(sig_np)
+            item = json.loads(line)
+            wav_path = prefix_path + item["audio_filepath"]
 
-        if sig.ndim == 1:
-            sig = sig.unsqueeze(0)      # [1, T]
-        else:
-            sig = sig.transpose(0, 1)   # [C, T]
+            wav_name = os.path.basename(wav_path)
+            print(f"Processing {wav_name}...")
 
-        if sig.shape[0] > 1:
-            sig = sig.mean(dim=0, keepdim=True)
+            sig_np, sample_rate = sf.read(wav_path, dtype="float32")
+            sig = torch.from_numpy(sig_np)
 
-        audio = sig.to(torch.float32).to(device)
-        audio_len = torch.tensor([audio.shape[1]], dtype=torch.long, device=device)
+            if sig.ndim == 1:
+                sig = sig.unsqueeze(0)      # [1, T]
+            else:
+                sig = sig.transpose(0, 1)   # [C, T]
 
-        # encoded, encoded_len = codec.encode_audio(
-        #     audio=audio,
-        #     audio_len=audio_len,
-        # )
+            if sig.shape[0] > 1:
+                sig = sig.mean(dim=0, keepdim=True)
 
-        # tokens = codec.quantize(encoded=encoded, encoded_len=encoded_len)
-        # decoded_repr, decoded_len = codec.dequantize(
-        #     tokens=tokens,
-        #     tokens_len=encoded_len,
-        # )
-        # rec_sig, rec_sig_len = codec.decode_audio(
-        #     inputs=decoded_repr,
-        #     input_len=decoded_len,
-        # )
+            audio = sig.to(torch.float32).to(device)
+            audio_len = torch.tensor([audio.shape[1]], dtype=torch.long, device=device)
 
-        # rec_sig = rec_sig[0, : rec_sig_len[0]].unsqueeze(0).cpu()
-
-
-
-        # [B]
-        # audio, audio_len = self.pad_audio(audio, audio_len)
-
-        # [B, D, T_encoded]
-        # encoded, encoded_len = self.audio_encoder(audio=audio, audio_len=audio_len)
-        encoded, encoded_len = codec.encode(
-            audio=audio,
-            audio_len=audio_len,
-        )
-
-
-        last_part = wav_path.split("/")[-1]
-
-        save_path = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens/"+experiment_name+"/"+last_part+ ".pt") 
-
-
-        output_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens") / experiment_name
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-
-        # print("tokens shape:", encoded.shape)
-        # print("encoded dtype:", encoded.dtype)
-        # print("encoded min:", encoded.min())
-        # print("encoded max:", encoded.max())
-        # print(encoded)
-
-        if save_path.exists():
-            print(f"Skipping, file already exists: {save_path}")
-        else:
-            torch.save(
-                {
-                    "tokens": encoded.detach().cpu(),
-                    "encoded_len": encoded_len.detach().cpu() if torch.is_tensor(encoded_len) else encoded_len,
-                },
-                save_path,
+            encoded, encoded_len = codec.encode(
+                audio=audio,
+                audio_len=audio_len,
             )
 
 
-        # [B, T]
-        # audio_gen, _ = codec.audio_decoder(inputs=encoded, input_len=encoded_len)
+            last_part = wav_path.split("/")[-1]
 
-        # sample_rate = 16000
+            save_path = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big/"+experiment_name+"/"+last_part+ ".pt") 
+
+            output_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big") / experiment_name
+            output_dir.mkdir(parents=True, exist_ok=True)
 
 
-        # save_path = f"{nano_results_path}/{wav_name}"
-        # print(f"Saving {wav_name} into the path {save_path}")
-        # # torchaudio.save(str(save_path), audio_gen, sample_rate)
-        # sf.write(str(save_path), audio_gen.squeeze(0).cpu().numpy(), sample_rate)
+            if save_path.exists():
+                print(f"Skipping, file already exists: {save_path}")
+            else:
+                torch.save(
+                    {
+                        "tokens": encoded.detach().cpu(),
+                        "encoded_len": encoded_len.detach().cpu() if torch.is_tensor(encoded_len) else encoded_len,
+                    },
+                    save_path,
+                )
 
 
 if __name__ == "__main__":
@@ -220,3 +189,9 @@ if __name__ == "__main__":
     reconstruct_wavs(experiment_name)
 
 
+
+# >>> data
+# {'tokens': tensor([[[2043, 2043, 2043,  ..., 2611, 2620, 2611],
+#          [2223, 2223, 2223,  ..., 2646, 2646, 2646],
+#          [2790, 2790, 2790,  ..., 1549, 1539, 1548],
+#          [1099, 1099, 1099,  ..., 2181, 1542, 1542]]], dtype=torch.int32), 'encoded_len': tensor([367], dtype=torch.int32)}
