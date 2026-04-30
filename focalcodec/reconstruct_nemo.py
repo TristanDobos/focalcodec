@@ -166,22 +166,11 @@ def reconstruct_wavs(experiment_name: str):
 
         # [B, D, T_encoded]
         # encoded, encoded_len = self.audio_encoder(audio=audio, audio_len=audio_len)
-        encoded, encoded_len = codec.encode_audio(
+        encoded, encoded_len = codec.encode(
             audio=audio,
             audio_len=audio_len,
         )
 
-        if codec.encoder_noise is not None:
-            encoded = codec.encoder_noise(encoded)
-
-        if codec.vector_quantizer:
-            if codec.vector_quantizer_has_commit_loss:
-                encoded, _, commit_loss = codec.vector_quantizer(inputs=encoded, input_len=encoded_len)
-            else:
-                encoded, _ = codec.vector_quantizer(inputs=encoded, input_len=encoded_len)
-                commit_loss = 0.0
-        else:
-            commit_loss = 0.0
 
         last_part = wav_path.split("/")[-1]
 
