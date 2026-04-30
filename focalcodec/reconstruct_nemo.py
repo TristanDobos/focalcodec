@@ -181,20 +181,22 @@ def reconstruct_wavs(experiment_name: str):
         output_dir.mkdir(parents=True, exist_ok=True)
 
 
-        print("tokens shape:", encoded.shape)
-        print("encoded dtype:", encoded.dtype)
-        print("encoded min:", encoded.min())
-        print("encoded max:", encoded.max())
-        print(encoded)
+        # print("tokens shape:", encoded.shape)
+        # print("encoded dtype:", encoded.dtype)
+        # print("encoded min:", encoded.min())
+        # print("encoded max:", encoded.max())
+        # print(encoded)
 
-        torch.save(
-            {
-                "tokens": encoded.detach().cpu(),
-                "encoded_len": encoded_len.detach().cpu() if torch.is_tensor(encoded_len) else encoded_len,
-            },
-            save_path,
-        )
-
+        if save_path.exists():
+            print(f"Skipping, file already exists: {save_path}")
+        else:
+            torch.save(
+                {
+                    "tokens": encoded.detach().cpu(),
+                    "encoded_len": encoded_len.detach().cpu() if torch.is_tensor(encoded_len) else encoded_len,
+                },
+                save_path,
+            )
 
 
         # [B, T]
