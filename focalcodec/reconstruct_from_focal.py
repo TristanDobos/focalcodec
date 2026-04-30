@@ -46,6 +46,10 @@ import sys
 
 device = "cpu"
 
+prefix_path = "/mnt/matylda6/xdobos00/NeMo-old/scripts/dataset_processing/data-100/"
+json_file = "/mnt/matylda6/xdobos00/NeMo-old/scripts/dataset_processing/data-100/librispeech_16000_flat.json"
+manifest_path = Path(json_file) 
+
 
 
 def reconstruct_wavs(experiment_name):
@@ -118,32 +122,42 @@ def reconstruct_wavs(experiment_name):
         codec.decompressor.load_state_dict(torch.load(decompressor_path, map_location="cpu"), strict=False)
 
 
-    for wav_path in files_to_reconstruct:
-        print()
-        sig, sample_rate = torchaudio.load(wav_path)
+        with manifest_path.open("r", encoding="utf-8") as f:
+            for line in f:
+                if not line:
+                    continue
 
-        wav_name = os.path.basename(wav_path)
-        print(f"Processing {wav_name}...")
+                item = json.loads(line)
+                wav_path = prefix_path + item["audio_filepath"]
+                print()
+                sig, sample_rate = torchaudio.load(wav_path)
 
-        # Resample for encoding
-        input_sig = torchaudio.functional.resample(sig, sample_rate, codec.sample_rate_input).to(device)
+                wav_name = os.path.basename(wav_path)
+                print(f"Processing {wav_name}...")
 
-        with torch.no_grad():
-            toks = codec.sig_to_toks(input_sig)
-            rec_sig = codec.toks_to_sig(toks).cpu()
+                # Resample for encoding
+                input_sig = torchaudio.functional.resample(sig, sample_rate, codec.sample_rate_input).to(device)
 
-        # Save reconstruction at original sample rate
-        rec_sig = torchaudio.functional.resample(rec_sig, codec.sample_rate_output, sample_rate)
+                with torch.no_grad():
+                    toks = codec.sig_to_toks(input_sig)
 
-        save_path = "/mnt/scratch/tmp/xdobos00/focal_results/reconstructed/" + experiment_name + "/" + wav_name
+                    save_path = "/mnt/scratch/tmp/xdobos00/nemo_tokens_big/" + experiment_name + "/" + wav_name
 
-        print(f"Saving {wav_name} into the path {save_path}")
+                    print(f"Saving {wav_name} into the path {save_path}")
 
-        save_dir = f"/mnt/scratch/tmp/xdobos00/focal_results/reconstructed/{experiment_name}"
-        os.makedirs(save_dir, exist_ok=True)
-        
-        torchaudio.save(save_path, rec_sig, sample_rate)
-        print("Inference test complete. Saved reconstruction.")
+                    save_dir = f"/mnt/scratch/tmp/xdobos00/nemo_tokens_big/{experiment_name}"
+                    os.makedirs(save_dir, exist_ok=True)
+
+                    print("toks are")
+                    print(toks)
+                    
+                    # torch.save(
+                    #     {
+                    #         "tokens": toks,
+                    #     },
+                    #     save_path,
+                    # )
+                    print("Inference test complete. Saved reconstruction.")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
