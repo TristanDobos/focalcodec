@@ -76,7 +76,7 @@ files_to_reconstruct = ["/mnt/matylda6/xdobos00/bp-training/gt_wavs/3853-163249-
 "/mnt/matylda6/xdobos00/bp-training/gt_wavs/3853-163249-0048.wav",  
 "/mnt/matylda6/xdobos00/bp-training/gt_wavs/3853-163249-0053.wav"]
 
-device = "cpu"
+device = "cuda" if torch.cuda.is_available() else "cpu"
 
 prefix_path = "/mnt/matylda6/xdobos00/NeMo-old/scripts/dataset_processing/data-100/"
 
