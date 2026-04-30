@@ -148,8 +148,8 @@ def reconstruct_wavs(experiment_name):
                 save_dir = f"/mnt/scratch/tmp/xdobos00/nemo_tokens_big/{experiment_name}"
                 os.makedirs(save_dir, exist_ok=True)
 
-                print("toks are")
-                print(toks)
+                # print("toks are")
+                # print(toks)
                 
                 # torch.save(
                 #     {
