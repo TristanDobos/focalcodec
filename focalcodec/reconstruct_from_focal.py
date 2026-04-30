@@ -122,42 +122,42 @@ def reconstruct_wavs(experiment_name):
         codec.decompressor.load_state_dict(torch.load(decompressor_path, map_location="cpu"), strict=False)
 
 
-        with manifest_path.open("r", encoding="utf-8") as f:
-            for line in f:
-                if not line:
-                    continue
+    with manifest_path.open("r", encoding="utf-8") as f:
+        for line in f:
+            if not line:
+                continue
 
-                item = json.loads(line)
-                wav_path = prefix_path + item["audio_filepath"]
-                print()
-                sig, sample_rate = torchaudio.load(wav_path)
+            item = json.loads(line)
+            wav_path = prefix_path + item["audio_filepath"]
+            print()
+            sig, sample_rate = torchaudio.load(wav_path)
 
-                wav_name = os.path.basename(wav_path)
-                print(f"Processing {wav_name}...")
+            wav_name = os.path.basename(wav_path)
+            print(f"Processing {wav_name}...")
 
-                # Resample for encoding
-                input_sig = torchaudio.functional.resample(sig, sample_rate, codec.sample_rate_input).to(device)
+            # Resample for encoding
+            input_sig = torchaudio.functional.resample(sig, sample_rate, codec.sample_rate_input).to(device)
 
-                with torch.no_grad():
-                    toks = codec.sig_to_toks(input_sig)
+            with torch.no_grad():
+                toks = codec.sig_to_toks(input_sig)
 
-                    save_path = "/mnt/scratch/tmp/xdobos00/nemo_tokens_big/" + experiment_name + "/" + wav_name
+                save_path = "/mnt/scratch/tmp/xdobos00/nemo_tokens_big/" + experiment_name + "/" + wav_name
 
-                    print(f"Saving {wav_name} into the path {save_path}")
+                print(f"Saving {wav_name} into the path {save_path}")
 
-                    save_dir = f"/mnt/scratch/tmp/xdobos00/nemo_tokens_big/{experiment_name}"
-                    os.makedirs(save_dir, exist_ok=True)
+                save_dir = f"/mnt/scratch/tmp/xdobos00/nemo_tokens_big/{experiment_name}"
+                os.makedirs(save_dir, exist_ok=True)
 
-                    print("toks are")
-                    print(toks)
-                    
-                    # torch.save(
-                    #     {
-                    #         "tokens": toks,
-                    #     },
-                    #     save_path,
-                    # )
-                    print("Inference test complete. Saved reconstruction.")
+                print("toks are")
+                print(toks)
+                
+                # torch.save(
+                #     {
+                #         "tokens": toks,
+                #     },
+                #     save_path,
+                # )
+                print("Inference test complete. Saved reconstruction.")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
