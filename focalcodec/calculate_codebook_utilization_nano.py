@@ -137,7 +137,7 @@ tokens_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big") / experiment_name
 
 codebook_size = 9*8*8*7
 num_codebooks = 4
-top_k = 100
+top_k = 10
 
 
 #   {"model_name": "nano", "name": "na_e2_v3_0_15kbps", "target_kbps": 0.15, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[2, 2, 2]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 12}, # nano_ex2_3   ok
