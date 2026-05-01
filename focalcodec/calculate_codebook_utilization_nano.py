@@ -155,16 +155,34 @@ for c in range(num_codebooks):
     print(f"  normalized perplexity: {metrics[f'codebook_{c}_normalized_perplexity'] * 100:.2f}%")
 
     cb_counts = counts[c]
-    k = min(top_k, codebook_size)
+    total = cb_counts.sum().item()
 
-    top_counts, top_ids = torch.topk(cb_counts, k=k, largest=True)
+    nonzero_ids = torch.nonzero(cb_counts > 0, as_tuple=False).flatten()
+    used_count = nonzero_ids.numel()
 
-    print(f"  top {top_k} most used codes:")
-    for rank, (code_id, count) in enumerate(zip(top_ids.tolist(), top_counts.tolist()), start=1):
-        if count == 0:
-            break
+    k = min(top_k, used_count)
 
-        print(f"    {rank:3d}. code {code_id:4d}: {int(count)}")
+    if k > 0:
+        top_counts, top_ids = torch.topk(cb_counts, k=k, largest=True)
+
+        print(f"  most used codes, top {k} of {used_count} used:")
+        print(f"    {'rank':>4}  {'code':>6}  {'count':>12}  {'usage':>8}")
+        print(f"    {'-' * 4}  {'-' * 6}  {'-' * 12}  {'-' * 8}")
+
+        for rank, (code_id, count) in enumerate(
+            zip(top_ids.tolist(), top_counts.tolist()),
+            start=1,
+        ):
+            usage_pct = 100.0 * count / total if total > 0 else 0.0
+
+            print(
+                f"    {rank:4d}  "
+                f"{code_id:6d}  "
+                f"{int(count):12,d}  "
+                f"{usage_pct:7.2f}%"
+            )
+    else:
+        print("  most used codes: none")
 
     print()
 
