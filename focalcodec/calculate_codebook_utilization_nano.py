@@ -148,7 +148,6 @@ metrics, counts = compute_entropy_from_saved_tokens(
     codebook_size=codebook_size,
     num_codebooks=num_codebooks,
 )
-
 for c in range(num_codebooks):
     print(f"Codebook {c}:")
     print(f"  used codes: {metrics[f'codebook_{c}_used_codes']} / {codebook_size}")
@@ -161,20 +160,19 @@ for c in range(num_codebooks):
     cb_counts = counts[c]
     total = cb_counts.sum().item()
 
-    nonzero_ids = torch.nonzero(cb_counts > 0, as_tuple=False).flatten()
-    used_count = nonzero_ids.numel()
+    used_ids = torch.nonzero(cb_counts > 0, as_tuple=False).flatten()
+    used_counts = cb_counts[used_ids]
 
-    k = min(top_k, used_count)
+    if used_ids.numel() > 0:
+        sorted_counts, order = torch.sort(used_counts, descending=True)
+        sorted_ids = used_ids[order]
 
-    if k > 0:
-        top_counts, top_ids = torch.topk(cb_counts, k=k, largest=True)
-
-        print(f"  most used codes, top {k} of {used_count} used:")
+        print(f"  used code counts, all {used_ids.numel()} used codes:")
         print(f"    {'rank':>4}  {'code':>6}  {'count':>12}  {'usage':>8}")
         print(f"    {'-' * 4}  {'-' * 6}  {'-' * 12}  {'-' * 8}")
 
         for rank, (code_id, count) in enumerate(
-            zip(top_ids.tolist(), top_counts.tolist()),
+            zip(sorted_ids.tolist(), sorted_counts.tolist()),
             start=1,
         ):
             usage_pct = 100.0 * count / total if total > 0 else 0.0
@@ -186,9 +184,49 @@ for c in range(num_codebooks):
                 f"{usage_pct:7.2f}%"
             )
     else:
-        print("  most used codes: none")
+        print("  used code counts: none")
 
     print()
+
+
+all_counts = counts.sum(dim=0)
+all_total = all_counts.sum().item()
+
+all_used_ids = torch.nonzero(all_counts > 0, as_tuple=False).flatten()
+all_used_counts = all_counts[all_used_ids]
+
+print("All codebooks combined:")
+print(f"  unique codes used: {all_used_ids.numel()} / {codebook_size}")
+
+if all_used_ids.numel() > 0:
+    sorted_counts, order = torch.sort(all_used_counts, descending=True)
+    sorted_ids = all_used_ids[order]
+
+    print(f"  used code counts, all {all_used_ids.numel()} unique codes:")
+    print(f"    {'rank':>4}  {'code':>6}  {'count':>12}  {'usage':>8}")
+    print(f"    {'-' * 4}  {'-' * 6}  {'-' * 12}  {'-' * 8}")
+
+    for rank, (code_id, count) in enumerate(
+        zip(sorted_ids.tolist(), sorted_counts.tolist()),
+        start=1,
+    ):
+        usage_pct = 100.0 * count / all_total if all_total > 0 else 0.0
+
+        print(
+            f"    {rank:4d}  "
+            f"{code_id:6d}  "
+            f"{int(count):12,d}  "
+            f"{usage_pct:7.2f}%"
+        )
+else:
+    print("  used code counts: none")
+
+print()
+
+print(f"Average utilization: {metrics['avg_codebook_utilization'] * 100:.2f}%")
+print(f"Average entropy: {metrics['avg_codebook_entropy_bits']:.3f} bits")
+print(f"Average normalized entropy: {metrics['avg_normalized_codebook_entropy'] * 100:.2f}%")
+print(f"Average normalized perplexity: {metrics['avg_normalized_codebook_perplexity'] * 100:.2f}%")
 
 print(f"Average utilization: {metrics['avg_codebook_utilization'] * 100:.2f}%")
 print(f"Average entropy: {metrics['avg_codebook_entropy_bits']:.3f} bits")
