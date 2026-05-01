@@ -135,7 +135,7 @@ args = parser.parse_args()
 experiment_name = args.experiment_name
 tokens_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big") / experiment_name
 
-codebook_size = 2*2*2
+codebook_size = 9*8*8*7
 num_codebooks = 4
 top_k = 100
 
