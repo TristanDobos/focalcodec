@@ -31,8 +31,13 @@ def compute_entropy_from_saved_tokens(
     for pt_path in pt_files:
         data = torch.load(pt_path, map_location="cpu")
 
-        tokens = data["tokens"]          # expected shape: [B, C, T]
+        tokens = data["tokens"]  # expected shape: [B, C, T]
         tokens_len = data.get("tokens_len", data.get("encoded_len"))
+
+        if tokens_len is None:
+            raise ValueError(
+                f"{pt_path} does not contain 'tokens_len' or 'encoded_len'"
+            )
 
         if tokens.ndim != 3:
             raise ValueError(
@@ -49,6 +54,7 @@ def compute_entropy_from_saved_tokens(
 
         for b in range(B):
             length = int(tokens_len[b].item()) if torch.is_tensor(tokens_len) else int(tokens_len[b])
+            length = min(length, T)
 
             for c in range(num_codebooks):
                 ids = tokens[b, c, :length].long()
@@ -121,11 +127,7 @@ def compute_entropy_from_saved_tokens(
         for c in range(num_codebooks)
     ) / num_codebooks
 
-    return metrics
-
-
-
-
+    return metrics, counts
 
 
 args = parser.parse_args()
@@ -133,22 +135,37 @@ args = parser.parse_args()
 experiment_name = args.experiment_name
 tokens_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens") / experiment_name
 
+codebook_size = 9 * 8 * 8 * 7
+num_codebooks = 4
+top_k = 100
 
-metrics = compute_entropy_from_saved_tokens(
+metrics, counts = compute_entropy_from_saved_tokens(
     tokens_dir=tokens_dir,
-    codebook_size=9 * 8 * 8 * 7,
-    num_codebooks=4,
+    codebook_size=codebook_size,
+    num_codebooks=num_codebooks,
 )
 
-
-for c in range(4):
+for c in range(num_codebooks):
     print(f"Codebook {c}:")
-    print(f"  used codes: {metrics[f'codebook_{c}_used_codes']} / 4032")
+    print(f"  used codes: {metrics[f'codebook_{c}_used_codes']} / {codebook_size}")
     print(f"  utilization: {metrics[f'codebook_{c}_utilization'] * 100:.2f}%")
     print(f"  entropy: {metrics[f'codebook_{c}_entropy_bits']:.3f} bits")
     print(f"  normalized entropy: {metrics[f'codebook_{c}_normalized_entropy'] * 100:.2f}%")
     print(f"  perplexity: {metrics[f'codebook_{c}_perplexity']:.2f}")
     print(f"  normalized perplexity: {metrics[f'codebook_{c}_normalized_perplexity'] * 100:.2f}%")
+
+    cb_counts = counts[c]
+    k = min(top_k, codebook_size)
+
+    top_counts, top_ids = torch.topk(cb_counts, k=k, largest=True)
+
+    print(f"  top {top_k} most used codes:")
+    for rank, (code_id, count) in enumerate(zip(top_ids.tolist(), top_counts.tolist()), start=1):
+        if count == 0:
+            break
+
+        print(f"    {rank:3d}. code {code_id:4d}: {int(count)}")
+
     print()
 
 print(f"Average utilization: {metrics['avg_codebook_utilization'] * 100:.2f}%")
