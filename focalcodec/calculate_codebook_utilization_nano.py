@@ -171,18 +171,18 @@ for c in range(num_codebooks):
         print(f"    {'rank':>4}  {'code':>6}  {'count':>12}  {'usage':>8}")
         print(f"    {'-' * 4}  {'-' * 6}  {'-' * 12}  {'-' * 8}")
 
-        for rank, (code_id, count) in enumerate(
-            zip(sorted_ids.tolist(), sorted_counts.tolist()),
-            start=1,
-        ):
-            usage_pct = 100.0 * count / total if total > 0 else 0.0
+        # for rank, (code_id, count) in enumerate(
+        #     zip(sorted_ids.tolist(), sorted_counts.tolist()),
+        #     start=1,
+        # ):
+        #     usage_pct = 100.0 * count / total if total > 0 else 0.0
 
-            print(
-                f"    {rank:4d}  "
-                f"{code_id:6d}  "
-                f"{int(count):12,d}  "
-                f"{usage_pct:7.2f}%"
-            )
+        #     print(
+        #         f"    {rank:4d}  "
+        #         f"{code_id:6d}  "
+        #         f"{int(count):12,d}  "
+        #         f"{usage_pct:7.2f}%"
+        #     )
     else:
         print("  used code counts: none")
 
