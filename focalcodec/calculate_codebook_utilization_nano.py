@@ -2,6 +2,8 @@ import argparse
 from pathlib import Path
 import torch
 import math
+from operator import mul
+from functools import reduce
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -134,13 +136,72 @@ args = parser.parse_args()
 
 experiment_name = args.experiment_name
 tokens_dir = Path("/mnt/scratch/tmp/xdobos00/nemo_tokens_big") / experiment_name
+configs = [
+   {"model_name": "nano", "name": "na_e1_50hz", "target_kbps": 0.6, "sampling_rate": 22050, "fps": 50, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[3, 3, 7, 7]", "up_sample_rates": "[7, 7, 3, 3]", "dims": 16}, # nano_ex1_1 ok
+   {"model_name": "nano", "name": "na_e1_25hz", "target_kbps": 0.3, "sampling_rate": 22050, "fps": 25, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[2, 3, 3, 7, 7]", "up_sample_rates": "[7, 7, 3, 3, 2]", "dims": 16}, # nano_ex1_2  ok
+   {"model_name": "nano", "name": "na_e1_25hz_1", "target_kbps": 0.3, "sampling_rate": 22050, "fps": 25, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[2, 7, 7, 9]", "up_sample_rates": "[9, 7, 7, 2]", "dims": 16},
+   {"model_name": "nano", "name": "na_e1_25hz_2", "target_kbps": 0.3, "sampling_rate": 22050, "fps": 25, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[3, 6, 7, 7]", "up_sample_rates": "[7, 7, 6, 3]", "dims": 16},
+   {"model_name": "nano", "name": "na_e1_25hz_3", "target_kbps": 0.3, "sampling_rate": 22050, "fps": 25, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[3, 6, 7, 7]", "up_sample_rates": "[7, 7, 6, 3]", "dims": 12},
+   {"model_name": "nano", "name": "na_e1_12_5hz", "target_kbps": 0.15, "sampling_rate": 22050, "fps": 12.5, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[2, 3, 6, 7, 7]", "up_sample_rates": "[7, 7, 6, 3, 2]", "dims": 16}, # nano_ex1_3 ok
 
-codebook_size = 9*8*8*7
-num_codebooks = 4
+  {"model_name": "nano", "name": "na_e2_0_6kbps", "target_kbps": 0.6, "sampling_rate": 22050, "fps": 50, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[3, 3, 7, 7]", "up_sample_rates": "[7, 7, 3, 3]", "dims": 16}, # nano_ex2_1   ok
+  {"model_name": "nano", "name": "na_e2_0_3kbps", "target_kbps": 0.3, "sampling_rate": 22050, "fps": 50, "codebook_levels": "[4, 4, 4]", "num_codebooks": 4, "down_sample_rates": "[3, 3, 7, 7]", "up_sample_rates": "[7, 7, 3, 3]", "dims": 12}, # nano_ex2_2 ok
+  {"model_name": "nano", "name": "na_e2_0_15kbps", "target_kbps": 0.15, "sampling_rate": 22050, "fps": 50, "codebook_levels": "[2, 2, 2]", "num_codebooks": 4, "down_sample_rates": "[3, 3, 7, 7]", "up_sample_rates": "[7, 7, 3, 3]", "dims": 12}, # nano_ex2_3   ok
+
+
+
+    {"model_name": "nano", "name": "na_e1_v2_50hz", "target_kbps": 0.6, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 16}, # nano_ex1_1 ok
+   {"model_name": "nano", "name": "na_e1_v2_25hz", "target_kbps": 0.3, "sampling_rate": 16000, "fps": 25, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 5, 8]", "up_sample_rates": "[8, 5, 4, 4]", "dims": 16},
+   {"model_name": "nano", "name": "na_e1_v2_12_5hz", "target_kbps": 0.15, "sampling_rate": 16000, "fps": 12.5, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 5, 8, 8]", "up_sample_rates": "[8, 8, 5, 4]", "dims": 16}, # nano_ex1_3 ok
+
+   {"model_name": "nano", "name": "na_e3_12_5hz", "target_kbps": 0.15, "sampling_rate": 16000, "fps": 12.5, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[2, 2, 5, 8, 8]", "up_sample_rates": "[8, 8, 5, 2, 2]", "dims": 16}, # nano_ex1_3 ok
+
+   {"model_name": "nano", "name": "na_e4_48_12_5hz",  "batch_size": 2,"target_kbps": 0.15, "sampling_rate": 16000, "fps": 12.5, "encoder_base_channels": 48, "decoder_base_channels": 1728, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 5, 8, 8]", "up_sample_rates": "[8, 8, 5, 4]", "dims": 16}, # nano_ex1_3 ok
+   {"model_name": "nano", "name": "na_e4_72_12_5hz", "batch_size": 2, "target_kbps": 0.15, "sampling_rate": 16000, "fps": 12.5, "encoder_base_channels": 72, "decoder_base_channels": 2592, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 5, 8, 8]", "up_sample_rates": "[8, 8, 5, 4]", "dims": 16}, # nano_ex1_3 ok
+   {"model_name": "nano", "name": "na_e4_96_12_5hz", "batch_size": 1, "target_kbps": 0.15, "sampling_rate": 16000, "fps": 12.5, "encoder_base_channels": 96, "decoder_base_channels": 3456, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 8, 5, 8]", "up_sample_rates": "[8, 5, 8, 4]", "dims": 16}, # nano_ex1_3 ok
+   {"model_name": "nano", "name": "na_e4_96_12_5hz_2", "batch_size": 1, "target_kbps": 0.15, "sampling_rate": 16000, "fps": 12.5, "encoder_base_channels": 96, "decoder_base_channels": 3456, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[2, 4, 4, 5, 8]", "up_sample_rates": "[8, 5, 4, 4, 2]", "dims": 16}, # nano_ex1_3 ok
+   {"model_name": "nano", "name": "na_e4_96_12_5hz_3", "batch_size": 1, "target_kbps": 0.15, "sampling_rate": 16000, "fps": 12.5, "encoder_base_channels": 96, "decoder_base_channels": 3456, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[2, 2, 4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4, 2, 2]", "dims": 16}, # nano_ex1_3 ok
+
+
+  {"model_name": "nano", "name": "na_e2_v2_0_6kbps", "target_kbps": 0.6, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 16}, # nano_ex2_1   ok
+  {"model_name": "nano", "name": "na_e2_v2_0_3kbps", "target_kbps": 0.3, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[4, 4, 4]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 12}, # nano_ex2_2 ok
+  {"model_name": "nano", "name": "na_e2_v2_0_15kbps", "target_kbps": 0.15, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[2, 2, 2]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 12}, # nano_ex2_3   ok
+
+
+
+
+    {"model_name": "nano", "name": "na_e1_v3_50hz", "target_kbps": 0.6, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 16}, # nano_ex1_1 ok
+   {"model_name": "nano", "name": "na_e1_v3_25hz", "target_kbps": 0.3, "sampling_rate": 16000, "fps": 25, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 5, 8]", "up_sample_rates": "[8, 5, 4, 4]", "dims": 16},
+   {"model_name": "nano", "name": "na_e1_v3_12_5hz", "target_kbps": 0.15, "sampling_rate": 16000, "fps": 12.5, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 5, 8, 8]", "up_sample_rates": "[8, 8, 5, 4]", "dims": 16}, # nano_ex1_3 ok
+   {"model_name": "nano", "name": "na_e1_v3_6_25hz", "target_kbps": 0.075, "sampling_rate": 16000, "fps": 6.25, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[5, 8, 8, 8]", "up_sample_rates": "[8, 8, 8, 5]", "dims": 16}, # nano_ex1_3 ok
+
+  {"model_name": "nano", "name": "na_e2_v3_0_6kbps", "target_kbps": 0.6, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[9, 8, 8, 7]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 16}, # nano_ex2_1   ok
+  {"model_name": "nano", "name": "na_e2_v3_0_3kbps", "target_kbps": 0.3, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[4, 4, 4]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 12}, # nano_ex2_2 ok
+  {"model_name": "nano", "name": "na_e2_v3_0_15kbps", "target_kbps": 0.15, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[2, 2, 2]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 12}, # nano_ex2_3   ok
+
+
+  {"model_name": "focal", "name": "fo_e1_50hz", "target_kbps": 0.65, "sampling_rate": 16000, "token_rate": 50, "num_binary_codebooks": 13, "compressor_downscale_factors": "[1, 1, 1]", "decompressor_upscale_factors": "[1, 1, 1]"}, # fo_ex1_1   ok
+  {"model_name": "focal", "name": "fo_e1_25hz", "target_kbps": 0.325, "sampling_rate": 16000, "token_rate": 25, "num_binary_codebooks": 13, "compressor_downscale_factors": "[2, 1, 1]", "decompressor_upscale_factors": "[1, 1, 2]"}, # fo_ex1_2  
+  {"model_name": "focal", "name": "fo_e1_12_5hz", "target_kbps": 0.1625, "sampling_rate": 16000, "token_rate": 12.5, "num_binary_codebooks": 13, "compressor_downscale_factors": "[2, 2, 1]", "decompressor_upscale_factors": "[1, 2, 2]"}, # fo_ex1_3  
+
+  {"model_name": "focal", "name": "fo_e2_cb13", "target_kbps": 0.65, "sampling_rate": 16000, "token_rate": 50, "num_binary_codebooks": 13, "compressor_downscale_factors": "[1, 1, 1]", "decompressor_upscale_factors": "[1, 1, 1]"}, # fo_ex2_1  
+  {"model_name": "focal", "name": "fo_e2_cb7", "target_kbps": 0.35, "sampling_rate": 16000, "token_rate": 50, "num_binary_codebooks": 7, "compressor_downscale_factors": "[1, 1, 1]", "decompressor_upscale_factors": "[1, 1, 1]"}, # fo_ex2_2  
+  {"model_name": "focal", "name": "fo_e2_cb3", "target_kbps": 0.15, "sampling_rate": 16000, "token_rate": 50, "num_binary_codebooks": 3, "compressor_downscale_factors": "[1, 1, 1]", "decompressor_upscale_factors": "[1, 1, 1]"}, # fo_ex2_3  
+]
+
+def find_config_by_name(name):
+    for cfg in configs:
+        if cfg["name"] == name:
+            return cfg
+    raise ValueError(f"Config with name '{name}' not found")
+
+codebook_size = reduce(mul, exec(find_config_by_name(experiment_name)["codebook_levels"]))
+num_codebooks = find_config_by_name(experiment_name)["num_codebooks"]
 top_k = 10
 
 
 #   {"model_name": "nano", "name": "na_e2_v3_0_15kbps", "target_kbps": 0.15, "sampling_rate": 16000, "fps": 50, "codebook_levels": "[2, 2, 2]", "num_codebooks": 4, "down_sample_rates": "[4, 4, 4, 5]", "up_sample_rates": "[5, 4, 4, 4]", "dims": 12}, # nano_ex2_3   ok
+
 
 
 metrics, counts = compute_entropy_from_saved_tokens(
