@@ -1,4 +1,5 @@
 import argparse
+import ast
 from pathlib import Path
 import torch
 import math
@@ -195,8 +196,12 @@ def find_config_by_name(name):
             return cfg
     raise ValueError(f"Config with name '{name}' not found")
 
-codebook_size = reduce(mul, exec(find_config_by_name(experiment_name)["codebook_levels"]))
-num_codebooks = find_config_by_name(experiment_name)["num_codebooks"]
+cfg = find_config_by_name(experiment_name)
+
+codebook_levels = ast.literal_eval(cfg["codebook_levels"])
+codebook_size = reduce(mul, codebook_levels)
+
+num_codebooks = cfg["num_codebooks"]
 top_k = 10
 
 
