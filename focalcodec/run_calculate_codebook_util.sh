@@ -12,7 +12,7 @@ export CUDA_VISIBLE_DEVICES=$(~/scripts/free-gpus.sh "$ALLOWED_GPUS")
 
 if [[ "$EXP_NAME" == na* ]]; then
     source /mnt/matylda6/xdobos00/nemo_final/bin/activate
-    python calculate_codebook_utilization_nano.py "$EXP_NAME"
+    python /mnt/matylda6/xdobos00/focal-original/focalcodec/focalcodec/calculate_codebook_utilization_nano.py "$EXP_NAME"
 else
     source /mnt/matylda6/xdobos00/miniconda/etc/profile.d/conda.sh
     conda activate focal-pv310
